@@ -1,0 +1,29 @@
+create table UserData (
+  UserDataId int primary key,
+  Username varchar(50) unique,
+  Email varchar(254) unique,
+  PasswordHash varchar(255)
+);
+
+create table AccessTokens (
+  AccessTokenId int primary key,
+  TokenValue char(37),
+  fk_UserDataId int,
+  foreign key (fk_UserDataId) references UserData(UserDataId) on delete cascade
+);
+
+create table Chats (
+  ChatId int primary key,
+  ChatName varchar(25),
+  SelectedAI varchar(50),
+  fk_UserDataId int,
+  foreign key (fk_UserDataId) references UserData(UserDataId) on delete cascade
+);
+
+create table ChatMessages (
+  ChatMessageId int primary key,
+  Content text,
+  Sender enum("user","ai"),
+  fk_ChatId int,
+  foreign key (fk_ChatId) references Chats(ChatId) on delete cascade
+);
