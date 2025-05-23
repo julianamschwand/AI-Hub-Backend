@@ -1,9 +1,9 @@
 import express from "express"
 import session from "express-session"
-import bcrypt from "bcrypt"
 import cors from "cors"
 import dotenv from "dotenv"
 import { createSessionStore } from "./db.js"
+import * as userHandlers from "./handlers/userHandlers.js"
 dotenv.config()
 
 
@@ -30,7 +30,14 @@ app.use(session({
   }
 }))
 
-////////////////
+//Users
+app.get("/getuserdata", userHandlers.getuserdata)
+app.post("/register", userHandlers.register)
+app.post("/login", userHandlers.login)
+app.post("/logout", userHandlers.logout)
+app.delete("/deleteuser", userHandlers.deleteuser)
+
+
 
 const port = process.env.PORT || 3000
 
