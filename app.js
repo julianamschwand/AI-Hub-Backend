@@ -4,6 +4,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import { createSessionStore } from "./db.js"
 import * as userHandlers from "./handlers/userHandlers.js"
+import * as accesstokenHandlers from "./handlers/accesstokenHandlers.js"
 dotenv.config()
 
 
@@ -37,7 +38,10 @@ app.post("/login", userHandlers.login)
 app.post("/logout", userHandlers.logout)
 app.delete("/deleteuser", userHandlers.deleteuser)
 
-
+//Accesstokens
+app.get("/getaccesstokens", accesstokenHandlers.getAccesstokens)
+app.post("/addaccesstokens", accesstokenHandlers.addAccesstokens)
+app.delete("/deleteaccesstoken", accesstokenHandlers.deleteAccesstoken)
 
 const port = process.env.PORT || 3000
 
