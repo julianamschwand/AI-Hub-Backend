@@ -1,4 +1,5 @@
 import { db } from "../db.js"
+import { InferenceClient } from "@huggingface/inference"
 
 export async function getAllChats(req, res) {
   if (!req.session.user) return res.status(401).json({success: false, error: "Unauthorized"})
@@ -9,7 +10,7 @@ export async function getAllChats(req, res) {
     res.status(200).json({success: true, chats: chats})
   } catch {
     console.error("Error:", error)
-    res.status(500).json("Error while fetching chats")
+    res.status(500).json({success: false, error: "Error while fetching chats"})
   }
 }
 
@@ -29,11 +30,11 @@ export async function getChat(req, res) {
       res.status(200).json({success: true, chatdata: chatdata, chatmessages: chatmessages})
     } catch (error) {
       console.error("Error:", error)
-      res.status(500).json("Error while fetching chatmessages")
+      res.status(500).json({success: false, error: "Error while fetching chatmessages"})
     }
   } catch (error) {
     console.error("Error:", error)
-    res.status(500).json("Error while fetching chatdata")
+    res.status(500).json({success: false, error: "Error while fetching chatdata"})
   }
 }
 
@@ -48,7 +49,7 @@ export async function addChat(req, res) {
     res.status(200).json({success: true, message: "Successfully added chat"})
   } catch (error) {
     console.error("Error:", error)
-    res.status(500).json("Error while inserting chat into database")
+    res.status(500).json({success: false, error: "Error while inserting chat into database"})
   }
 }
 
@@ -67,11 +68,11 @@ export async function deleteChat(req, res) {
       res.status(200).json({success: true, message: "Successfully deleted chat"})
     } catch (error) {
       console.error("Error:", error)
-      res.status(500).json("Error while deleting chat")
+      res.status(500).json({success: false, error: "Error while deleting chat"})
     }
   } catch (error) {
     console.error("Error:", error)
-    res.status(500).json("Error while fetching chat")
+    res.status(500).json({success: false, error: "Error while fetching chat"})
   }
 }
 
@@ -90,18 +91,66 @@ export async function renameChat(req, res) {
       res.status(200).json({success: true, message: "Successfully renamed chat"})
     } catch (error) {
       console.error("Error:", error)
-      res.status(500).json("Error while renaming chat")
+      res.status(500).json({success: false, error: "Error while renaming chat"})
     }
   } catch (error) {
     console.error("Error:", error)
-    res.status(500).json("Error while fetching chat")
+    res.status(500).json({success: false, error: "Error while fetching chat"})
   }
 }
 
 export async function addChatMessage(req, res) {
+  const {content, chatid} = req.body
+  if (!content || !chatid) return res.status(400).json({success: false, error: "Missing data"})
+  if (!req.session.user) return res.status(401).json({success: false, error: "Unauthorized"})
   
+  try {
+    let [chat] = await db.query("select SelectedAI from Chats where ChatId = ? and fk_UserDataId = ?", [chatid, req.session.user.id])
+    if (chat.length == 0) return res.status(404).json({success: false, error: "Chat not found or not the owner of the chat"})
+    chat = chat[0]
+    
+    try {
+      await db.query("insert into ChatMessages (Content, Sender, fk_ChatId) values (?,'user',?)", [content, chatid])
+      
+      try {
+        const [accesstokens] = await db.query("select TokenValue from AccessTokens where fk_UserDataId = ?", [req.session.user.id])
+        if (accesstokens.length == 0) return res.status(404).json({success: false, error: "No accesstokens found"})
+        
+        try {
+          const response = await AIResponse(accesstokens, chat.SelectedAI, content)
+
+          res.status(200).json({success: true, message: "Successfully added chat message", response: response})
+        } catch (error) {
+          console.error("Error:", error)
+          res.status(500).json({success: false, error: "Error while getting AI response"})
+        }
+      } catch (error) {
+        console.error("Error:", error)
+        res.status(500).json({success: false, error: "Error while fetching accesstokens"})
+      }
+    } catch (error) {
+      console.error("Error:", error)
+      res.status(500).json({success: false, error: "Error while inserting chat message into database"})
+    }
+  } catch (error) {
+    console.error("Error:", error)
+    res.status(500).json({success: false, error: "Error while fetching chat"})
+  }
 }
 
-async function AIResponse(accesstoken) {
+async function AIResponse(accesstokens, selectedai, content) {
+  const client = new InferenceClient(accesstokens[0].TokenValue);
 
+  const response = await client.chatCompletion({
+    provider: "auto",
+    model: selectedai,
+    messages: [
+        {
+            role: "user",
+            content: content,
+        },
+    ],
+  })
+
+  return response
 }
