@@ -5,6 +5,7 @@ import dotenv from "dotenv"
 import { createSessionStore } from "./db.js"
 import * as userHandlers from "./handlers/userHandlers.js"
 import * as accesstokenHandlers from "./handlers/accesstokenHandlers.js"
+import * as chatHandlers from "./handlers/chatHandlers.js"
 dotenv.config()
 
 
@@ -42,6 +43,14 @@ app.delete("/deleteuser", userHandlers.deleteuser)
 app.get("/getaccesstokens", accesstokenHandlers.getAccesstokens)
 app.post("/addaccesstokens", accesstokenHandlers.addAccesstokens)
 app.delete("/deleteaccesstoken", accesstokenHandlers.deleteAccesstoken)
+
+//Chats
+app.get("/getallchats", chatHandlers.getAllChats)
+app.post("/getchat", chatHandlers.getChat)
+app.post("/addchat", chatHandlers.addChat)
+app.delete("/deletechat", chatHandlers.deleteChat)
+app.patch("/renamechat", chatHandlers.renameChat)
+app.post("/addchatmessage", chatHandlers.addChatMessage)
 
 const port = process.env.PORT || 3000
 

@@ -36,6 +36,7 @@ export async function deleteAccesstoken(req, res) {
   
   try {
     let [token] = await db.query("select * from AccessTokens where AccessTokenId = ?", [accesstokenid])
+    if (token.length == 0) return res.status(404).json({success: false, error: "Accesstoken not found"}) 
     token = token[0] 
 
     if (token.fk_UserDataId !== req.session.user.id) return res.status(403).json({success: false, error: "Not your accesstoken"})
