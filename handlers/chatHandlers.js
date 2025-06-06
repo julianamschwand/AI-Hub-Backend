@@ -123,7 +123,7 @@ export async function addChatMessage(req, res) {
           try {
             let aiResponse = ""
             let tokenIndex = 0
-            
+
             for (const accesstoken of accesstokens) {
               aiResponse = await AIResponse(accesstoken.TokenValue, chat.SelectedAI, formattedChatmessages)
               if (aiResponse !== null) {
@@ -136,7 +136,7 @@ export async function addChatMessage(req, res) {
   
             try {
               await db.query("insert into ChatMessages (Content, Sender, fk_ChatId) values (?,'assistant',?)", [aiResponse, chatid])
-              res.status(200).json({success: true, message: "Successfully added chat message", response: aiResponse})
+              res.status(200).json({success: true, message: "Successfully added chat message"})
             } catch (error) {
               console.error("Error:", error)
               res.status(500).json({success: false, error: "Error inserting AI response into db"})
