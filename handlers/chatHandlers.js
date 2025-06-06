@@ -121,11 +121,22 @@ export async function addChatMessage(req, res) {
           const formattedChatmessages = chatmessages.map(m => ({role: m.Sender, content: m.Content}))
 
           try {
-            const response = await AIResponse(accesstokens, chat.SelectedAI, formattedChatmessages)
+            let aiResponse = ""
+            let tokenIndex = 0
+            
+            for (const accesstoken of accesstokens) {
+              aiResponse = await AIResponse(accesstoken.TokenValue, chat.SelectedAI, formattedChatmessages)
+              if (aiResponse !== null) {
+                break
+              } 
+
+              tokenIndex++
+              if (tokenIndex === accesstokens.length) return res.status(400).json({success: false, error: "All accesstokens used up"})
+            }
   
             try {
-              await db.query("insert into ChatMessages (Content, Sender, fk_ChatId) values (?,'assistant',?)", [response, chatid])
-              res.status(200).json({success: true, message: "Successfully added chat message", response: response})
+              await db.query("insert into ChatMessages (Content, Sender, fk_ChatId) values (?,'assistant',?)", [aiResponse, chatid])
+              res.status(200).json({success: true, message: "Successfully added chat message", response: aiResponse})
             } catch (error) {
               console.error("Error:", error)
               res.status(500).json({success: false, error: "Error inserting AI response into db"})
@@ -152,14 +163,22 @@ export async function addChatMessage(req, res) {
   }
 }
 
-async function AIResponse(accesstokens, selectedai, messages) {
-  const client = new InferenceClient(accesstokens[0].TokenValue);
+async function AIResponse(accesstoken, selectedai, messages) {
+  try {
+    const client = new InferenceClient(accesstoken);
+  
+    const response = await client.chatCompletion({
+      provider: "auto",
+      model: selectedai,
+      messages: messages,
+    })
 
-  const response = await client.chatCompletion({
-    provider: "auto",
-    model: selectedai,
-    messages: messages,
-  })
-  console.log(response)
-  return response.choices[0].message.content
+    return response.choices[0].message.content
+  } catch (error) {
+    if (error.message.includes("You have exceeded your monthly included credits for Inference Providers")) {
+      return null
+    } else {
+      throw(error)
+    }
+  }
 }
