@@ -117,12 +117,26 @@ export async function addChatMessage(req, res) {
         if (accesstokens.length == 0) return res.status(404).json({success: false, error: "No accesstokens found"})
         
         try {
-          const response = await AIResponse(accesstokens, chat.SelectedAI, content)
+          const [chatmessages] = await db.query("select ChatMessageId, Content, Sender from ChatMessages where fk_ChatId = ?", [chatid])
+          const formattedChatmessages = chatmessages.map(m => ({role: m.Sender, content: m.Content}))
 
-          res.status(200).json({success: true, message: "Successfully added chat message", response: response})
+          try {
+            const response = await AIResponse(accesstokens, chat.SelectedAI, formattedChatmessages)
+  
+            try {
+              await db.query("insert into ChatMessages (Content, Sender, fk_ChatId) values (?,'assistant',?)", [response, chatid])
+              res.status(200).json({success: true, message: "Successfully added chat message", response: response})
+            } catch (error) {
+              console.error("Error:", error)
+              res.status(500).json({success: false, error: "Error inserting AI response into db"})
+            }
+          } catch (error) {
+            console.error("Error:", error)
+            res.status(500).json({success: false, error: "Error while getting AI response"})
+          }
         } catch (error) {
           console.error("Error:", error)
-          res.status(500).json({success: false, error: "Error while getting AI response"})
+          res.status(500).json({success: false, error: "Error while fetching chat history"})
         }
       } catch (error) {
         console.error("Error:", error)
@@ -138,19 +152,14 @@ export async function addChatMessage(req, res) {
   }
 }
 
-async function AIResponse(accesstokens, selectedai, content) {
+async function AIResponse(accesstokens, selectedai, messages) {
   const client = new InferenceClient(accesstokens[0].TokenValue);
 
   const response = await client.chatCompletion({
     provider: "auto",
     model: selectedai,
-    messages: [
-        {
-            role: "user",
-            content: content,
-        },
-    ],
+    messages: messages,
   })
-
-  return response
+  console.log(response)
+  return response.choices[0].message.content
 }

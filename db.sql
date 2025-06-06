@@ -23,7 +23,7 @@ create table Chats (
 create table ChatMessages (
   ChatMessageId int primary key auto_increment,
   Content text,
-  Sender enum("user","ai"),
+  Sender enum("user","assistant"),
   fk_ChatId int,
   foreign key (fk_ChatId) references Chats(ChatId) on delete cascade
 );
