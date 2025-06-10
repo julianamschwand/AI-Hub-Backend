@@ -15,7 +15,6 @@ app.use(cors({
   origin: "https://aihub.amschwand.com",
   credentials: true
 }))
-app.set('trust proxy', 1)
 
 const sessionStore = createSessionStore()
 
@@ -28,7 +27,7 @@ app.use(session({
   cookie: {
     secure: true,
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "none",
     maxAge: 1000 * 60 * 60
   }
 }))
