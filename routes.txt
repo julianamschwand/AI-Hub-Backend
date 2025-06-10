@@ -1,6 +1,0 @@
-add accesstokens
-addchat
-sendprompt
-deletechat
-delete accesstokens
-rename chats

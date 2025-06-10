@@ -19,6 +19,8 @@ app.set('trust proxy', 2)
 
 const sessionStore = createSessionStore()
 
+const isProd = process.env.NODE_ENV == "production"
+
 app.use(session({
   key: "SessionId",
   secret: process.env.SESSION_SECRET,
@@ -26,9 +28,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,
+    secure: isProd,
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: isProd ? "strict" : "lax",
     maxAge: 1000 * 60 * 60
   }
 }))
