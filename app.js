@@ -13,9 +13,7 @@ const app = express()
 app.use(express.json())
 app.use(cors({
   origin: "https://aihub.amschwand.com",
-  credentials: true,
-  sameSite: true,
-  secure: true
+  credentials: true
 }))
 
 const sessionStore = createSessionStore()
@@ -27,9 +25,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: true,
     httpOnly: true,
-    sameSite: "None",
+    sameSite: "strict",
     maxAge: 1000 * 60 * 60
   }
 }))
