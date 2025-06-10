@@ -33,6 +33,7 @@ app.use(session({
 }))
 
 //Users
+app.get("/isloggedin", userHandlers.isloggedin)
 app.get("/getuserdata", userHandlers.getuserdata)
 app.post("/register", userHandlers.register)
 app.post("/login", userHandlers.login)

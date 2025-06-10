@@ -1,6 +1,14 @@
 import { db } from "../db.js"
 import bcrypt from "bcrypt"
 
+export async function isloggedin(req, res) {
+  if (req.session.user) {
+    res.status(200).json({success: true, loggedin: true, message: "Logged in"})
+  } else {
+    res.status(200).json({success: true, loggedin: false, message: "Not logged in"})
+  }
+}
+
 export async function getuserdata(req, res) {
   if (!req.session.user) return res.status(401).json({success: false, message: 'Unauthorized'})
   
