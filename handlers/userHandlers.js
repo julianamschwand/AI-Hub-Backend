@@ -8,7 +8,7 @@ export async function getuserdata(req, res) {
       let [user] = await db.query("select * from UserData where UserDataId = ?", [req.session.user.id])
       user = user[0]
   
-      res.status(200).json({id: user.UserDataId, username: user.Username, email: user.Email})
+      res.status(200).json({success: true, user: {id: user.UserDataId, username: user.Username, email: user.Email}})
     } catch (error) {
       console.error("Error:", error)
       res.status(500).json({success: false, error: "Error retrieving data from the database"})
