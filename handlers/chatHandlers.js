@@ -5,7 +5,7 @@ export async function getAllChats(req, res) {
   if (!req.session.user) return res.status(401).json({success: false, error: "Unauthorized"})
 
   try {
-    const [chats] = await db.query("select ChatId, ChatName from Chats where fk_UserDataId = ?", [req.session.user.id])
+    const [chats] = await db.query("select ChatId, ChatName, SelectedAI from Chats where fk_UserDataId = ?", [req.session.user.id])
 
     res.status(200).json({success: true, chats: chats})
   } catch {
